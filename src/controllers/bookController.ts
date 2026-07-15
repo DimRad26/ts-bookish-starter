@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import { connection } from '../DB_Connection';
+import { Book } from '../models/book';
 
 class BookController {
     router: Router;
@@ -6,23 +8,60 @@ class BookController {
     constructor() {
         this.router = Router();
         this.router.get('/:id', this.getBook.bind(this));
+        this.router.get('/', this.getBooks.bind(this));
 
         this.router.post('/', this.createBook.bind(this));
+    }
+
+    getRow(columns): any {
+        let row = {};
+        columns.forEach((column) => {
+            row[column.metadata.colName] = column.value;
+        });
+        return row;
     }
 
     getBook(req: Request, res: Response) {
         // TODO: implement functionality
         return res.status(500).json({
             error: 'server_error',
-            error_description: 'Endpoint not implemented yet.',
+            error_description: 'GetBook Endpoint not implemented yet.',
         });
+    }
+
+    getBooks(req: Request, res: Response) {
+        try{
+            var Request = require('tedious').Request;
+            const QUERY = 'SELECT * FROM Books;';
+            var books: any[] = []
+
+            const request = new Request(QUERY, (err, rowCount) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    return res.status(200).json(books);
+                    connection.close();
+                }
+            });
+
+            request.on('row', (columns) => {books.push(new Book(this.getRow(columns)))});
+
+            request.on('error', (err) => {
+                return res.status(500).json({error: err.message});
+            });
+
+            connection.execSql(request);
+        }
+        catch(err){
+            return res.status(500).json({error: err.message});
+        }
     }
 
     createBook(req: Request, res: Response) {
         // TODO: implement functionality
         return res.status(500).json({
             error: 'server_error',
-            error_description: 'Endpoint not implemented yet.',
+            error_description: 'CreateBook Endpoint not implemented yet.',
         });
     }
 }

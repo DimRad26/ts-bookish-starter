@@ -1,5 +1,8 @@
 import express from 'express';
 import 'dotenv/config';
+import {connection} from './DB_Connection';
+
+connection.connect();
 
 import healthcheckRoutes from './controllers/healthcheckController';
 import bookRoutes from './controllers/bookController';
