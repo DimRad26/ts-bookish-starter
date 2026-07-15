@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { connection } from '../DB_Connection';
+import { Book } from '../models/book';
 
 class BookController {
     router: Router;
@@ -10,6 +11,14 @@ class BookController {
         this.router.get('/', this.getBooks.bind(this));
 
         this.router.post('/', this.createBook.bind(this));
+    }
+
+    getRow(columns): any {
+        let row = {};
+        columns.forEach((column) => {
+            row[column.metadata.colName] = column.value;
+        });
+        return row;
     }
 
     getBook(req: Request, res: Response) {
@@ -35,20 +44,7 @@ class BookController {
                 }
             });
 
-
-            request.on('row', (columns) => {
-                let row = {};
-                columns.forEach((column) => {
-                    row[column.metadata.colName] = column.value;
-                });
-                const book: Book = {
-                    book_id: row["book_id"],
-                    ISBN: row["ISBN"],
-                    title: row["title"],
-                    copies_count: row["copies_count"],
-                };
-                books.push(book);
-            });
+            request.on('row', (columns) => {books.push(new Book(this.getRow(columns)))});
 
             request.on('error', (err) => {
                 return res.status(500).json({error: err.message});
